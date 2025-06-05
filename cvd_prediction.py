@@ -4,40 +4,53 @@ import pandas as pd
 import joblib
 from sklearn.preprocessing import StandardScaler
 
-# Load the model
-model = joblib.load('./models/random_forest.pkl')  # or random_forest.pkl
+# --- Page config ---
+st.set_page_config(page_title="CVD Risk Predictor", page_icon="🫀", layout="centered")
 
-# Load training data for feature names and scaling
+# --- Load model and scaler ---
+model = joblib.load('./models/random_forest.pkl')
 X_train = pd.read_csv('./data/feature_extraction/selected_features.csv')
 feature_names = X_train.columns.tolist()
-
-# Fit scaler
 scaler = StandardScaler()
 scaler.fit(X_train)
 
-# Streamlit UI
-st.title("Cardiovascular Disease Risk Prediction")
+# --- Sidebar Info ---
+st.sidebar.title("🩺 About")
+st.sidebar.markdown("""
+This app predicts the **risk of cardiovascular disease** based on health metrics.
 
-st.write("Please enter the following information:")
+- Model: Random Forest
+- Input: 7 health features
+- Output: Low or High risk
+""")
 
-# Collect 7 inputs dynamically
+# --- Main Title ---
+st.title("🫀 Cardiovascular Disease Risk Predictor")
+st.markdown("Enter your health information below to assess risk.")
+
+# --- Input Fields ---
 user_inputs = []
-for feature in feature_names:
-    value = st.number_input(f"{feature}", step=1.0)
-    user_inputs.append(value)
+cols = st.columns(2)  # 2-column layout for inputs
 
-if st.button("Predict Risk"):
-    # Convert to DataFrame with column names
+for i, feature in enumerate(feature_names):
+    col = cols[i % 2]  # Alternate between two columns
+    with col:
+        value = st.number_input(f"{feature}", step=1.0)
+        user_inputs.append(value)
+
+# --- Prediction Button ---
+if st.button("🔍 Predict Risk"):
     input_df = pd.DataFrame([user_inputs], columns=feature_names)
-
-    # Scale input
     input_scaled = scaler.transform(input_df)
-
-    # Predict
     prediction = model.predict(input_scaled)
 
-    # Output result
+    # --- Result Display ---
+    st.markdown("---")
     if prediction[0] == 1:
-        st.error("High risk of cardiovascular disease.")
+        st.error("⚠️ High risk of cardiovascular disease. Please consult a doctor.")
     else:
-        st.success("Low risk of cardiovascular disease.")
+        st.success("✅ Low risk of cardiovascular disease. Keep maintaining a healthy lifestyle!")
+
+# --- Footer ---
+st.markdown("<hr>", unsafe_allow_html=True)
+st.caption("Built with ❤️ using Streamlit.")
